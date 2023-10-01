@@ -115,10 +115,11 @@ fn add_tags_for_mew(mew: Mew, mew_hash: ActionHash) -> ExternResult<()> {
         })?;
     }
     for regex_match in cashtag_regex.find_iter(&mew.text) {
-        add_cashtag_for_mew(AddCashtagForMewInput {
-            base_cashtag: regex_match.as_str().into(),
-            target_mew_hash: mew_hash.clone(),
-        })?;
+        // TODO invalid commit errors
+        // add_cashtag_for_mew(AddCashtagForMewInput {
+        //     base_cashtag: regex_match.as_str().into(),
+        //     target_mew_hash: mew_hash.clone(),
+        // })?;
     }
     for link in mew.links {
         if let LinkTarget::Mention(mention) = link {

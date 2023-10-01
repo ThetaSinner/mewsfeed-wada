@@ -1,64 +1,36 @@
 <template>
   <div class="w-full flex justify-start items-start p-3">
-    <RouterLink
-      v-if="myProfile"
-      class="px-0 py-0 z-10"
-      alt="My Profile"
-      :to="{
-        name: ROUTES.profile,
-        params: { agentPubKey: encodeHashToBase64(client.myPubKey) },
-      }"
-    >
-      <agent-avatar
-        :agentPubKey="client.myPubKey"
-        :store="profilesStore"
-        size="54"
-        disable-tooltip
-        disable-copy
-      />
+    <RouterLink v-if="myProfile" class="px-0 py-0 z-10" alt="My Profile" :to="{
+      name: ROUTES.profile,
+      params: { agentPubKey: encodeHashToBase64(client.myPubKey) },
+    }">
+      <agent-avatar :agentPubKey="client.myPubKey" :store="profilesStore" size="54" disable-tooltip disable-copy />
     </RouterLink>
 
     <div class="flex-1 px-4 sm:px-8 h-full">
-      <div
-        v-if="isMewTypeWithText"
-        ref="mewContainer"
-        class="h-full w-full flex flex-col justify-between items-start relative"
-      >
-        <div
-          ref="mewContainerInput"
-          contenteditable
+      <div v-if="isMewTypeWithText" ref="mewContainer"
+        class="h-full w-full flex flex-col justify-between items-start relative">
+        <div ref="mewContainerInput" contenteditable
           class="overflow-auto w-full break-all outline-none border-0 outline-0 mew-container-input text-left"
-          data-placeholder="What's mewing on?"
-          @keydown="onKeyDown"
-          @keyup="onKeyUp"
-          @mouseup="onMouseUp"
-          @paste="onPaste"
-        ></div>
+          data-placeholder="What's mewing on?" @keydown="onKeyDown" @keyup="onKeyUp" @mouseup="onMouseUp"
+          @paste="onPaste"></div>
 
         <div class="w-full flex justify-between items-end mt-1">
           <div class="flex justify-start items-center space-x-4">
-            <IconHelpCircleOutline
-              v-tooltip.bottom="{
-                html: true,
-                content:
-                  'You can mention people with @ and use #hashtags and $cashtags as well as ^links in a mew. <br /></br />You can press Ctrl/Cmd + Enter to publish.',
-                popperClass: 'w-96',
-                triggers: ['hover'],
-              }"
-              class="w-5 h-5 text-base-content/50"
-            />
+            <IconHelpCircleOutline v-tooltip.bottom="{
+              html: true,
+              content:
+                'You can mention people with @ and use #hashtags and $cashtags as well as ^links in a mew. <br /></br />You can press Ctrl/Cmd + Enter to publish.',
+              popperClass: 'w-96',
+              triggers: ['hover'],
+            }" class="w-5 h-5 text-base-content/50" />
           </div>
 
-          <div
-            v-if="!isMewEmpty"
-            class="flex justify-start items-center text-xs space-x-1"
-          >
-            <div
-              :class="{
-                'text-error': !mewLengthOk,
-                'text-base-300': mewLengthOk,
-              }"
-            >
+          <div v-if="!isMewEmpty" class="flex justify-start items-center text-xs space-x-1">
+            <div :class="{
+              'text-error': !mewLengthOk,
+              'text-base-300': mewLengthOk,
+            }">
               {{ mewContentLength }} /
               {{
                 min([TRUNCATED_MEW_LENGTH, dnaProperties.mew_characters_max])
@@ -74,90 +46,58 @@
           </div>
         </div>
 
-        <div
-          id="link-target-input-container"
-          class="hidden absolute bg-base-200 text-base-content rounded-md text-xs sm:text-sm"
-        >
+        <div id="link-target-input-container"
+          class="hidden absolute bg-base-200 text-base-content rounded-md text-xs sm:text-sm">
           <div class="relative">
-            <input
-              ref="linkTargetInput"
-              v-model="linkTarget"
-              type="text"
-              placeholder="Paste a URL to create a link"
+            <input ref="linkTargetInput" v-model="linkTarget" type="text" placeholder="Paste a URL to create a link"
               class="block w-full rounded-md border-0 outline-none px-2 py-1 sm:leading-6 bg-base-200 text-base-content"
-              :aria-invalid="!linkTargetValid"
-              aria-label="Enter a URL to create a link"
-              @keydown.enter="createLinkTag"
-              @keydown.space="createLinkTag"
-              @keydown.tab="createLinkTag"
-              @blur="resetLinkTargetInput"
-            />
-            <div
-              v-if="!linkTargetValid"
-              class="pointer-events-none text-error inset-y-0 right-0 flex justify-start items-center space-x-2 px-2 py-1 border-t-2 border-base-300 border-solid"
-            >
+              :aria-invalid="!linkTargetValid" aria-label="Enter a URL to create a link" @keydown.enter="createLinkTag"
+              @keydown.space="createLinkTag" @keydown.tab="createLinkTag" @blur="resetLinkTargetInput" />
+            <div v-if="!linkTargetValid"
+              class="pointer-events-none text-error inset-y-0 right-0 flex justify-start items-center space-x-2 px-2 py-1 border-t-2 border-base-300 border-solid">
               <IconAlertCircleOutline class="h-5 w-5" aria-hidden="true" />
               <div>Link target must be valid URL</div>
             </div>
           </div>
         </div>
 
-        <div
-          id="autocompleter"
-          class="hidden absolute bg-base-200 rounded-md text-xs sm:text-sm p-2"
-        >
+        <div id="autocompleter" class="hidden absolute bg-base-200 rounded-md text-xs sm:text-sm p-2">
           <div v-if="currentAgentSearch.length < 3">Min 3 chars</div>
 
-          <div
-            v-else-if="autocompleterLoading"
-            class="flex justify-center w-32"
-          >
-            <div
-              class="loading loading-spinner loading-sm m-2 text-base-content"
-            ></div>
+          <div v-else-if="autocompleterLoading" class="flex justify-center w-32">
+            <div class="loading loading-spinner loading-sm m-2 text-base-content"></div>
           </div>
 
-          <div
-            v-else-if="agentAutocompletions.length === 0"
-            class="text-base-content"
-          >
-            Nothing found, Kitty
+          <div v-else-if="flowAutoCompletions.length > 0" class="text-base-content">
+            <span v-for="(option, i) in flowAutoCompletions" :key="i" tabindex="0"
+              class="cursor-pointer flex justify-start items-center space-x-2 p-2 rounded-md hover:bg-neutral-focus hover:text-neutral-content focus:bg-neutral-focus focus:text-neutral-content"
+              @click="() => onAutocompleteFlowSelect(option)" @keydown.enter.prevent="() => onAutocompleteFlowSelect(option)
+                " @keydown="onAutocompleteKeyDown">
+              <p>{{ option }}</p>
+            </span>
+          </div>
+
+          <div v-else-if="agentAutocompletions.length > 0" class="text-base-content">
+            <a v-for="([agentPubKey, profile], i) in agentAutocompletions" :key="i" tabindex="0"
+              class="cursor-pointer flex justify-start items-center space-x-2 p-2 rounded-md hover:bg-neutral-focus hover:text-neutral-content focus:bg-neutral-focus focus:text-neutral-content"
+              @click="onAutocompleteAgentSelect(agentPubKey, profile)" @keydown.enter.prevent="
+                onAutocompleteAgentSelect(agentPubKey, profile)
+                " @keydown="onAutocompleteKeyDown">
+              <BaseAgentProfileName :profile="profile" :agentPubKey="agentPubKey" />
+            </a>
           </div>
 
           <div v-else>
-            <a
-              v-for="([agentPubKey, profile], i) in agentAutocompletions"
-              :key="i"
-              tabindex="0"
-              class="cursor-pointer flex justify-start items-center space-x-2 p-2 rounded-md hover:bg-neutral-focus hover:text-neutral-content focus:bg-neutral-focus focus:text-neutral-content"
-              @click="onAutocompleteAgentSelect(agentPubKey, profile)"
-              @keydown.enter.prevent="
-                onAutocompleteAgentSelect(agentPubKey, profile)
-              "
-              @keydown="onAutocompleteKeyDown"
-            >
-              <BaseAgentProfileName
-                :profile="profile"
-                :agentPubKey="agentPubKey"
-              />
-            </a>
+            Nothing found, Kitty
           </div>
         </div>
       </div>
     </div>
 
-    <button
-      ref="createButtonInput"
-      class="btn btn-neutral btn-sm sm:btn-md rounded-full"
-      :class="{
-        'btn-disabled':
-          (isMewEmpty || isMewOverfull || isMewUnderfull) && isMewTypeWithText,
-      }"
-      :loading="saving"
-      tabindex="0"
-      @click="publishMew()"
-      @keydown.enter.prevent="publishMew()"
-    >
+    <button ref="createButtonInput" class="btn btn-neutral btn-sm sm:btn-md rounded-full" :class="{
+      'btn-disabled':
+        (isMewEmpty || isMewOverfull || isMewUnderfull) && isMewTypeWithText,
+    }" :loading="saving" tabindex="0" @click="publishMew()" @keydown.enter.prevent="publishMew()">
       <div class="flex justify-start items-center space-x-1 sm:space-x-2">
         <IconArrowForwardOutline class="text-xl" />
         <div>
@@ -170,10 +110,8 @@
     </button>
   </div>
 
-  <CreateProfileIfNotFoundDialog
-    v-model="showCreateProfileDialog"
-    @profile-created="(profile: Profile) => publishMew(profile)"
-  />
+  <CreateProfileIfNotFoundDialog v-model="showCreateProfileDialog"
+    @profile-created="(profile: Profile) => publishMew(profile)" />
 </template>
 
 <script setup lang="ts">
@@ -239,9 +177,11 @@ const linkTarget = ref();
 const linkTargetInput = ref();
 const currentAgentSearch = ref("");
 const agentAutocompletions = ref<Array<[AgentPubKey, Profile]>>([]);
+const flowAutoCompletions = ref<Array<string>>([]);
 const autocompleterLoading = ref(false);
 const showCreateProfileDialog = ref(false);
 const createButtonInput = ref();
+const inLinkFlow = ref(false);
 
 const isMewEmpty = computed(() => mewContentLength.value === 0);
 const isMewFull = computed(
@@ -466,10 +406,37 @@ const onAutocompleteAgentSelect = (agent: AgentPubKey, profile: Profile) => {
   setMewContentLength();
 };
 
+const onAutocompleteFlowSelect = (option: string) => {
+  inLinkFlow.value = true;
+  const range = new Range();
+  range.setStart(currentNode, currentAnchorOffset);
+  range.setEnd(currentNode, currentFocusOffset);
+
+  // Insert mention link: '@' + agent username
+  const anchor = document.createElement("a");
+  anchor.href = "#";
+  anchor.textContent = option;
+  range.deleteContents();
+  range.insertNode(anchor);
+
+  // insert space after insert
+  const spaceNode = document.createTextNode(String.fromCharCode(160));
+  anchor.after(spaceNode);
+
+  // reset autocomplete input
+  hideAutocompleter();
+  document.getSelection()?.setPosition(spaceNode, 1);
+
+  setMewContentLength();
+
+  // Trigger next by hacky hack
+  onCaretPositionChange();
+};
+
 const onKeyDown = (event: KeyboardEvent) => {
   setMewContentLength();
 
-  if (agentAutocompletions.value.length > 0 && !autocompleterLoading.value) {
+  if ((agentAutocompletions.value.length > 0 || flowAutoCompletions.value.length > 0) && !autocompleterLoading.value) {
     onAutocompleteKeyDown(event);
     return;
   }
@@ -530,7 +497,7 @@ const onKeyUp = (keyUpEvent: KeyboardEvent) => {
   }
   const content = keyUpEvent.currentTarget.textContent;
   const selection = document.getSelection();
-  if (keyUpEvent.key === " ") {
+  if (keyUpEvent.key === " " && !inLinkFlow) {
     hideAutocompleter();
     resetLinkTargetInput();
   } else if (
@@ -538,7 +505,7 @@ const onKeyUp = (keyUpEvent: KeyboardEvent) => {
     selection?.anchorNode?.parentElement?.tagName === "A"
   ) {
     stripAnchorFromLink(selection);
-  } else if (keyUpEvent.key.length === 1 && content) {
+  } else if (keyUpEvent.key.length === 1) {
     // all single characters
     onCaretPositionChange();
   }
@@ -568,17 +535,24 @@ const onPaste = (event: ClipboardEvent) => {
  */
 
 const loadAutocompleterFlows = async () => {
-// TODO: Code for flows autocompleter
+  try {
+    autocompleterLoading.value = true;
 
-// Code from loadAutocompleterUsers...
-// try {
-//   autocompleterLoading.value = true;
-//   agentAutocompletions.value = await searchProfiles(nickname);
-// } catch (error) {
-//   showError(error);
-// } finally {
-//   autocompleterLoading.value = false;
-// }
+    console.log("Requesting prompts for:", getTrimmedText());
+
+    flowAutoCompletions.value = await client.callZome({
+      role_name: "mewsfeed",
+      zome_name: "flow",
+      fn_name: "prompt_for_next_flow",
+      payload: getTrimmedText(),
+    });
+
+    console.log(flowAutoCompletions.value);
+  } catch (error) {
+    showError(error);
+  } finally {
+    autocompleterLoading.value = false;
+  }
 };
 
 const onCaretPositionChange = () => {
@@ -587,6 +561,8 @@ const onCaretPositionChange = () => {
   if (!selection || !content) {
     return;
   }
+
+  console.log(content)
 
   // find end of word that the caret is positioned at
   const ahead = content.substring(selection.anchorOffset);
@@ -608,7 +584,23 @@ const onCaretPositionChange = () => {
   const startOfWordIndex = lastSpaceIndex === -1 ? 0 : lastSpaceIndex + 1;
   const currentWord = content.substring(startOfWordIndex, endOfWordIndex);
 
-  if (currentWord.length && selection.anchorNode) {
+  console.log("check current for flow");
+  if (isFlowTag(content) || inLinkFlow.value) {
+    console.log("It is a flow tag", selection.anchorNode, startOfWordIndex, endOfAheadIndex);
+    // hack the settings
+    currentAgentSearch.value = "hack";
+    if (content === "%") {
+      currentAnchorOffset = startOfWordIndex;
+      currentFocusOffset = endOfWordIndex;
+    } else {
+      currentAnchorOffset = endOfWordIndex;
+      currentFocusOffset = endOfWordIndex;
+    }
+    
+
+    showElement(selection.anchorNode, startOfWordIndex, "#autocompleter");
+    loadAutocompleterFlows();
+  } else if (currentWord.length && selection.anchorNode) {
     // current word starts with @ and is followed by at least another word character
     if (isMentionTag(currentWord)) {
       showElement(selection.anchorNode, startOfWordIndex, "#autocompleter");
@@ -621,7 +613,7 @@ const onCaretPositionChange = () => {
         currentFocusOffset = endOfWordIndex;
       }
       // current word is a URL
-    } else if (isLinkTag(currentWord)) {
+    } else if (isLinkTag(currentWord) || inLinkFlow.value) {
       // find start of tag that the caret is positioned at
       const behind = content.substring(0, selection.anchorOffset - 1);
       let lastCaretIndex = -1;
@@ -641,12 +633,7 @@ const onCaretPositionChange = () => {
       currentAnchorOffset = lastCaretIndex;
       currentFocusOffset = endOfWordIndex;
 
-    // current word starts with a flow tag
-    } else if (isFlowTag(currentWord)) {
-      // show autocompleter
-      showElement(selection.anchorNode, startOfWordIndex, "#autocompleter");
-      loadAutocompleterFlows();
-
+      // current word starts with a flow tag
     } else {
       hideAutocompleter();
       resetLinkTargetInput();
@@ -715,6 +702,8 @@ const showElement = (
 
     element.style.display = "block";
     element.focus();
+
+    console.log('show element succeeded')
   }
 };
 

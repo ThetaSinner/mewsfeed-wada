@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <h1 class="text-2xl font-title font-bold tracking-tighter mb-8 px-4">
-      mewsfeed
+      wadafeed
     </h1>
 
     <BaseInfiniteScroll

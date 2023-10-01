@@ -9,6 +9,10 @@ use regex_lite::Regex;
 
 #[hdk_extern]
 pub fn prompt_for_next_flow(msg: String) -> ExternResult<Vec<String>> {
+    // Strip nbsp
+    let msg = msg.replace("\u{00A0}", " ");
+    info!("Generating prompt for {:?}", msg);
+
     if msg.is_empty() {
         info!("Skipping empty input input");
         return Ok(vec![]);
@@ -28,7 +32,9 @@ pub fn prompt_for_next_flow(msg: String) -> ExternResult<Vec<String>> {
         prompt_promise_msg(msg.as_str())
     } else if thanks_prefix.is_match(msg.as_str()) {
         // Nothing to prompt
-        Ok(vec![])
+        Ok(vec![
+            "Loved your work".to_string(),
+        ])
     } else {
         Ok(vec![
             "%Request:".to_string(),
@@ -40,39 +46,52 @@ pub fn prompt_for_next_flow(msg: String) -> ExternResult<Vec<String>> {
 
 // Expects input starting with "%Request:"
 fn prompt_request_msg(msg: &str) -> ExternResult<Vec<String>> {
-    // Right at the start, can either prompt
-    let request_start = Regex::new(r"%Request: ?").unwrap();
+    info!("request prompt 1");
+
+    let request_start = Regex::new(r"^%Request: ?$").map_err(|e| {
+        error!("Bad regex: {:?}", e);
+        wasm_error!("Bad regex")
+    })?;
+
     if request_start.is_match(msg) {
         return Ok(vec![
             "@username".to_string(),
-            "$0.1BTC".to_string(),
+            "$1BTC".to_string(),
             make_between_prompt()?,
         ]);
     }
 
-    let request_with_mention = Regex::new(r"%Request: ?(@\S+)").unwrap();
+    info!("request prompt 2");
+
+    let request_with_mention = Regex::new(r"^%Request: ?(@\S+) ?$").unwrap();
     if request_with_mention.is_match(msg) {
         return Ok(vec![
-            "$0.1BTC".to_string(),
+            "$1BTC".to_string(),
             make_between_prompt()?,
         ]);
     }
 
-    let request_with_mention_and_cash_tag = Regex::new(r"%Request: ?(@\S+) \$([0-9]+)([A-Z]+) ?").unwrap();
+    info!("request prompt 3");
+
+    let request_with_mention_and_cash_tag = Regex::new(r"^%Request: ?(@\S+) \$([0-9\.]+)([A-Z]+) ?$").unwrap();
     if request_with_mention_and_cash_tag.is_match(msg) {
         return Ok(vec![
             make_between_prompt()?,
         ]);
     }
 
-    let request_skipped_mention_with_cash_tag = Regex::new(r"%Request: \$([0-9]+)([A-Z]+) ?").unwrap();
+    info!("request prompt 4");
+
+    let request_skipped_mention_with_cash_tag = Regex::new(r"^%Request: \$([0-9\.]+)([A-Z]+) ?$").unwrap();
     if request_skipped_mention_with_cash_tag.is_match(msg) {
         return Ok(vec![
             make_between_prompt()?,
         ]);
     }
 
-    let request_with_between_no_msg = Regex::new(r"%Request: ?(@\S+)? (\$([0-9\.]+)([A-Z]+))? ?between ?([0-9]{4}\/[0-9]{2}\/[0-9]{2})-([0-9]{4}\/[0-9]{2}\/[0-9]{2}) ?").unwrap();
+    info!("request prompt 5");
+
+    let request_with_between_no_msg = Regex::new(r"^%Request: ?(@\S+)? (\$([0-9\.]+)([A-Z]+))? ?between ?([0-9]{4}\/[0-9]{2}\/[0-9]{2})-([0-9]{4}\/[0-9]{2}\/[0-9]{2}) ?$").unwrap();
     if request_with_between_no_msg.is_match(msg) {
         return Ok(vec![
             "Make me a coffee".to_string(),
@@ -85,25 +104,25 @@ fn prompt_request_msg(msg: &str) -> ExternResult<Vec<String>> {
 // Expects input starting with "%Promise:"
 fn prompt_promise_msg(msg: &str) -> ExternResult<Vec<String>> {
     // Right at the start, can either prompt
-    let promise_start = Regex::new(r"%Promise: ?").unwrap();
+    let promise_start = Regex::new(r"^%Promise: ?$").unwrap();
     if promise_start.is_match(msg) {
         return Ok(vec![
             "@username".to_string(),
         ]);
     }
 
-    let promise_with_mention = Regex::new(r"%Promise: ?(@\S+ ?").unwrap();
+    let promise_with_mention = Regex::new(r"^%Promise: ?(@\S+) ?$").unwrap();
     if promise_with_mention.is_match(msg) {
         return Ok(vec![
-            "$0.1BTC".to_string(),
-            "Make me a coffee".to_string(),
+            "$1BTC".to_string(),
+            "I'm on it!".to_string(),
         ]);
     }
 
-    let promise_with_mention_and_cash_tag = Regex::new(r"%Promise: ?(@\S+) \$([0-9]+)([A-Z]+) ?").unwrap();
+    let promise_with_mention_and_cash_tag = Regex::new(r"^%Promise: ?(@\S+) \$([0-9\.]+)([A-Z]+) ?$").unwrap();
     if promise_with_mention_and_cash_tag.is_match(msg) {
         return Ok(vec![
-            "Make me a coffee".to_string(),
+            "I'm on it!".to_string(),
         ]);
     }
 
@@ -111,12 +130,18 @@ fn prompt_promise_msg(msg: &str) -> ExternResult<Vec<String>> {
 }
 
 fn make_between_prompt() -> ExternResult<String> {
+    info!("Getting system time");
     let now = sys_time()?;
+
+    info!("Got it");
     let later = now.checked_add(&std::time::Duration::from_secs(60 * 60 * 24 * 5)).ok_or(wasm_error!("failed to add duration"))?;
 
-    let now_dt = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(now.0, 0).unwrap(), Utc);
-    let later_dt = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(later.0, 0).unwrap(), Utc);
+    info!("Made later");
 
+    let now_dt = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(now.0 / 1_000_000, 0).unwrap(), Utc);
+    let later_dt = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(later.0 / 1_000_000, 0).unwrap(), Utc);
+
+    info!("Do format");
     Ok(format!("between {}-{}", now_dt.format("%Y/%m/%d").to_string(), later_dt.format("%Y/%m/%d").to_string()))
 }
 
