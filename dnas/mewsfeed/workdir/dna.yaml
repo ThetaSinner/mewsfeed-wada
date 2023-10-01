@@ -20,6 +20,10 @@ integrity:
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/follows_integrity.wasm"
       dependencies: ~
+    - name: flow_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/flow_integrity.wasm"
+      dependencies: ~
     - name: likes_integrity
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/likes_integrity.wasm"
@@ -46,6 +50,11 @@ coordinator:
       bundled: "../../../target/wasm32-unknown-unknown/release/follows.wasm"
       dependencies:
         - name: follows_integrity
+    - name: flow
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/flow.wasm"
+      dependencies:
+        - name: flow_integrity
     - name: likes
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/likes.wasm"

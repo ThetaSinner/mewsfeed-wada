@@ -20,6 +20,12 @@ path = "dnas/mewsfeed/zomes/coordinator/follows"
 [workspace.dependencies.follows_integrity]
 path = "dnas/mewsfeed/zomes/integrity/follows"
 
+[workspace.dependencies.flow]
+path = "dnas/mewsfeed/zomes/coordinator/flow"
+
+[workspace.dependencies.flow_integrity]
+path = "dnas/mewsfeed/zomes/integrity/flow"
+
 [workspace.dependencies.follows_types]
 path = "crates/follows_types"
 

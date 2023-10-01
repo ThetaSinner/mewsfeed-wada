@@ -659,6 +659,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "flow_integrity",
+ "hdk",
+ "regex-lite",
+ "serde",
+]
+
+[[package]]
+name = "flow_integrity"
+version = "0.0.1"
+dependencies = [
+ "hdi",
+ "serde",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1889,6 +1908,12 @@ dependencies = [
  "memchr",
  "regex-syntax",
 ]
+
+[[package]]
+name = "regex-lite"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f96ede7f386ba6e910092e7ccdc04176cface62abebea07ed6b46d870ed95ca2"
 
 [[package]]
 name = "regex-syntax"
