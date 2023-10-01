@@ -3,10 +3,14 @@ export const TAG_SYMBOLS = {
   HASHTAG: "#",
   MENTION: "@",
   LINK: "^",
+  FLOW: "%",
 };
 
 const MENTION_TAG_REGEX_STRING = `\\B\\${TAG_SYMBOLS.MENTION}\\S+`;
 const MENTION_TAG_REGEX = new RegExp(MENTION_TAG_REGEX_STRING, "mi");
+
+const FLOW_TAG_REGEX_STRING = `\\B\\${TAG_SYMBOLS.FLOW}\\S+`;
+const FLOW_TAG_REGEX = new RegExp(FLOW_TAG_REGEX_STRING, "mi");
 
 const LINK_TAG_REGEX_STRING = `\\B\\${TAG_SYMBOLS.LINK}\\w+`;
 const LINK_TAG_REGEX = new RegExp(LINK_TAG_REGEX_STRING, "mi");
@@ -22,6 +26,7 @@ const regexpString = [
   HASH_TAG_REGEX.source,
   MENTION_TAG_REGEX.source,
   LINK_TAG_REGEX.source, // single-word labeled url
+  FLOW_TAG_REGEX.source,
 ];
 
 export const TAG_REGEX = new RegExp(`${regexpString.join("|")}`, "mi");
@@ -38,9 +43,10 @@ export const isTag = (text: string): boolean => TAG_REGEX.test(text);
 export const isHashtag = (text: string): boolean => HASH_TAG_REGEX.test(text);
 export const isCashtag = (text: string): boolean => CASH_TAG_REGEX.test(text);
 
-export const isMentionTag = (text: string): boolean =>
-  MENTION_TAG_REGEX.test(text);
+export const isMentionTag = (text: string): boolean => MENTION_TAG_REGEX.test(text);
 
 export const isLinkTag = (text: string): boolean => LINK_TAG_REGEX.test(text);
+
+export const isFlowTag = (text: string): boolean => FLOW_TAG_REGEX.test(text);
 
 export const isRawUrl = (text: string): boolean => RAW_URL_REGEX.test(text);

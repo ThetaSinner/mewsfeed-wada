@@ -179,7 +179,7 @@
 <script setup lang="ts">
 import { useSearchProfiles } from "@/utils/profiles";
 import { Profile } from "@holochain-open-dev/profiles";
-import { isMentionTag, isRawUrl, isLinkTag, TAG_SYMBOLS } from "@/utils/tags";
+import { isMentionTag, isRawUrl, isLinkTag, isFlowTag, TAG_SYMBOLS } from "@/utils/tags";
 import { onMounted, ref, computed, ComputedRef, inject } from "vue";
 import {
   Mew,
@@ -563,6 +563,24 @@ const onPaste = (event: ClipboardEvent) => {
   }
 };
 
+/**
+ * Flow Tag Handling
+ */
+
+const loadAutocompleterFlows = async () => {
+// TODO: Code for flows autocompleter
+
+// Code from loadAutocompleterUsers...
+// try {
+//   autocompleterLoading.value = true;
+//   agentAutocompletions.value = await searchProfiles(nickname);
+// } catch (error) {
+//   showError(error);
+// } finally {
+//   autocompleterLoading.value = false;
+// }
+};
+
 const onCaretPositionChange = () => {
   const selection = document.getSelection();
   const content = selection?.anchorNode?.textContent;
@@ -622,6 +640,13 @@ const onCaretPositionChange = () => {
       );
       currentAnchorOffset = lastCaretIndex;
       currentFocusOffset = endOfWordIndex;
+
+    // current word starts with a flow tag
+    } else if (isFlowTag(currentWord)) {
+      // show autocompleter
+      showElement(selection.anchorNode, startOfWordIndex, "#autocompleter");
+      loadAutocompleterFlows();
+
     } else {
       hideAutocompleter();
       resetLinkTargetInput();
