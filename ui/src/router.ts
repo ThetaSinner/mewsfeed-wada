@@ -43,6 +43,11 @@ export const routes: RouteRecordRaw[] = [
     path: "/profiles/:agentPubKey",
     name: ROUTES.profile,
     component: AgentProfile,
+     children: [{
+      path: "promises",
+      name: "promises",
+      component: AgentProfile,
+     }]
   },
   {
     path: "/profiles/:agentPubKey/mews",

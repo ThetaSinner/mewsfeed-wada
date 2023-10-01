@@ -1,90 +1,55 @@
 <template>
   <div class="mt-4">
     <div v-if="!isInitialLoadingProfile && agentPubKey">
-      <BaseAgentProfileDetail
-        :profile="profile"
-        :joined-timestamp="joinedTimestamp"
-        :agentPubKey="agentPubKey"
-        :creators-count="creatorsCount || 0"
-        :followers-count="followersCount || 0"
-        class="bg-base-200/75 rounded-3xl"
-        style="-webkit-backdrop-filter: blur(10px)"
-        enable-copy-agent-pub-key
-        enable-lightbox-on-avatar-click
-        @click-edit-profile="showEditProfileDialog = true"
-        @click-followers="
-          () => {
+      <BaseAgentProfileDetail :profile="profile" :joined-timestamp="joinedTimestamp" :agentPubKey="agentPubKey"
+        :creators-count="creatorsCount || 0" :followers-count="followersCount || 0" class="bg-base-200/75 rounded-3xl"
+        style="-webkit-backdrop-filter: blur(10px)" enable-copy-agent-pub-key enable-lightbox-on-avatar-click
+        @click-edit-profile="showEditProfileDialog = true" @click-followers="() => {
             if (followersCount && followersCount > 0)
               showFollowersListDialog = true;
           }
-        "
-        @click-creators="
-          () => {
-            if (creatorsCount && creatorsCount > 0)
-              showCreatorsListDialog = true;
-          }
-        "
-        @toggle-follow="refetchFollowersCount"
-      />
-      <EditAgentProfileDialog
-        v-if="profile"
-        v-model="showEditProfileDialog"
-        :profile="profile"
-        @profile-updated="(profile: any) => {
-          refetchProfile();
-          queryClient.setQueryData([
-              'profiles',
-              'getAgentProfile',
-              encodeHashToBase64(agentPubKey),
-            ],
-            profile
-          );
-        }"
-      />
+          " @click-creators="() => {
+      if (creatorsCount && creatorsCount > 0)
+        showCreatorsListDialog = true;
+    }
+    " @toggle-follow="refetchFollowersCount" />
+      <EditAgentProfileDialog v-if="profile" v-model="showEditProfileDialog" :profile="profile" @profile-updated="(profile: any) => {
+        refetchProfile();
+        queryClient.setQueryData([
+          'profiles',
+          'getAgentProfile',
+          encodeHashToBase64(agentPubKey),
+        ],
+          profile
+        );
+      }" />
 
-      <BaseList
-        v-slot="{ item }"
-        class="my-8 px-4"
-        title="pinned"
-        :items="pinnedMews"
-        :is-loading="isLoadingPinnedMews"
-        :show-empty-list="false"
-      >
-        <BaseMewListItem
-          :feed-mew="item"
-          @mew-pinned="
-            () => {
-              refetchPinnedMews();
-              refetchAuthoredMews();
-            }
-          "
-          @mew-unpinned="
-            () => {
-              refetchPinnedMews();
-              refetchAuthoredMews();
-            }
-          "
-          @mew-deleted="
-            () => {
-              refetchPinnedMews();
-              refetchAuthoredMews();
-            }
-          "
-          @mew-licked="refetchPinnedMews"
-          @mew-unlicked="refetchPinnedMews"
-          @reply-created="refetchAuthoredMews"
-          @mewmew-created="refetchAuthoredMews"
-          @quote-created="refetchAuthoredMews"
-        />
+      <button class="btn btn-xs sm:btn-md px-4 btn-outline rounded-3xl flex justify-center items-center space-x-2" @click="() => router.push({
+        name: 'promises',
+      })">
+        Promises
+      </button>
+
+      <BaseList v-if="!showingPromises" v-slot="{ item }" class="my-8 px-4" title="pinned" :items="pinnedMews"
+        :is-loading="isLoadingPinnedMews" :show-empty-list="false">
+        <BaseMewListItem :feed-mew="item" @mew-pinned="() => {
+            refetchPinnedMews();
+            refetchAuthoredMews();
+          }
+          " @mew-unpinned="() => {
+      refetchPinnedMews();
+      refetchAuthoredMews();
+    }
+    " @mew-deleted="() => {
+      refetchPinnedMews();
+      refetchAuthoredMews();
+    }
+    " @mew-licked="refetchPinnedMews" @mew-unlicked="refetchPinnedMews" @reply-created="refetchAuthoredMews"
+          @mewmew-created="refetchAuthoredMews" @quote-created="refetchAuthoredMews" />
       </BaseList>
 
-      <BaseList
-        v-slot="{ item }"
-        class="my-8 px-4"
-        title="mews"
-        :items="authoredMews"
-        :is-loading="isLoadingAuthoredMews"
-        :enable-more-button="authoredMews && authoredMews.length >= pageLimit"
+      <BaseList v-if="!showingPromises" v-slot="{ item }" class="my-8 px-4" title="mews" :items="authoredMews"
+        :is-loading="isLoadingAuthoredMews" :enable-more-button="authoredMews && authoredMews.length >= pageLimit"
         @click-more="
           router.push({
             name: 'authoredMews',
@@ -92,45 +57,52 @@
               agentPubKey: route.params.agentPubKey,
             },
           })
-        "
-      >
-        <BaseMewListItem
-          :feed-mew="item"
-          @mew-pinned="
-            () => {
-              refetchPinnedMews();
-              refetchAuthoredMews();
-            }
-          "
-          @mew-unpinned="
-            () => {
-              refetchPinnedMews();
-              refetchAuthoredMews();
-            }
-          "
-          @mew-deleted="
-            () => {
-              refetchPinnedMews();
-              refetchAuthoredMews();
-            }
-          "
-          @mew-licked="refetchAuthoredMews"
-          @mew-unlicked="refetchAuthoredMews"
-          @reply-created="refetchAuthoredMews"
-          @mewmew-created="refetchAuthoredMews"
-          @quote-created="refetchAuthoredMews"
-        />
+          ">
+        <BaseMewListItem :feed-mew="item" @mew-pinned="() => {
+            refetchPinnedMews();
+            refetchAuthoredMews();
+          }
+          " @mew-unpinned="() => {
+      refetchPinnedMews();
+      refetchAuthoredMews();
+    }
+    " @mew-deleted="() => {
+      refetchPinnedMews();
+      refetchAuthoredMews();
+    }
+    " @mew-licked="refetchAuthoredMews" @mew-unlicked="refetchAuthoredMews" @reply-created="refetchAuthoredMews"
+          @mewmew-created="refetchAuthoredMews" @quote-created="refetchAuthoredMews" />
+      </BaseList>
+
+      <BaseList v-if="showingPromises" v-slot="{ item }" class="my-8 px-4" title="my promises" :items="promiseMews"
+        :is-loading="isLoadingAuthoredMews" :enable-more-button="promiseMews && promiseMews.length >= pageLimit"
+        @click-more="
+          router.push({
+            name: 'authoredMews',
+            params: {
+              agentPubKey: route.params.agentPubKey,
+            },
+          })
+          ">
+        <BaseMewListItem :feed-mew="item" @mew-pinned="() => {
+            refetchPinnedMews();
+            refetchAuthoredMews();
+          }
+          " @mew-unpinned="() => {
+      refetchPinnedMews();
+      refetchAuthoredMews();
+    }
+    " @mew-deleted="() => {
+      refetchPinnedMews();
+      refetchAuthoredMews();
+    }
+    " @mew-licked="refetchAuthoredMews" @mew-unlicked="refetchAuthoredMews" @reply-created="refetchAuthoredMews"
+          @mewmew-created="refetchAuthoredMews" @quote-created="refetchAuthoredMews" />
       </BaseList>
     </div>
   </div>
-  <FollowersListDialog
-    v-model="showFollowersListDialog"
-    :agent-pub-key="agentPubKey"
-  />
-  <CreatorsListDialog
-    v-model="showCreatorsListDialog"
-    :agent-pub-key="agentPubKey"
-  />
+  <FollowersListDialog v-model="showFollowersListDialog" :agent-pub-key="agentPubKey" />
+  <CreatorsListDialog v-model="showCreatorsListDialog" :agent-pub-key="agentPubKey" />
 </template>
 
 <script setup lang="ts">
@@ -186,6 +158,60 @@ const {
 });
 watch(errorAuthoredMews, console.error);
 
+const promiseMews = ref<any[]>([]);
+
+watch(authoredMews, (mews) => {
+  // console.log('will process', mews);
+
+  // const myRequests = findRequests(mews);
+
+  // const myThanks = findThanks(mews);
+  // const myThanksReplyTo = myThanks.map((mew) => mew.original_mew);
+
+  // const matched = matchRequestToThanks(myRequests, myThanksReplyTo);
+
+  // console.log(matched)
+
+  const myPromises = findPromises(mews);
+
+  console.log(myPromises);
+  promiseMews.value = myPromises
+})
+
+function findRequests(mews: any[]): any[] {
+  return mews.filter((mew: any) => mew.mew.text.startsWith("%Request"));
+}
+
+function findPromises(mews: any[]): any[] {
+  return mews.filter((mew: any) => mew.mew.text.startsWith("%Promise"));
+}
+
+function findThanks(mews: any[]): any[] {
+  return mews.filter((mew: any) => mew.mew.text.startsWith("%Thanks"));
+}
+
+function matchRequestToThanks(requests: any[], thanks: any[]) {
+  thanks.map((thank: any) => {
+    if (thank.mew.mew_type.Reply) {
+      console.log(thank.mew.mew_type.Reply);
+      const matched = requests.filter((request: any) => {
+        console.log(request.action_hash, Array.from(request.action_hash), Array.from(request.action_hash) == Array.from(thank.mew.mew_type.Reply));
+        return Array.from(request.action_hash)[22] == Array.from(thank.mew.mew_type.Reply)[22]
+      })
+
+      if (matched.length > 0) {
+        return {
+          request: matched[0].mew.text,
+          promise: thank.original_mew.mew.text,
+          thanks: thank.mew.text,
+        }
+      }
+    }
+
+    return null
+  }).filter(x => x)
+}
+
 const fetchPinnedMews = () =>
   client.callZome({
     role_name: "mewsfeed",
@@ -214,6 +240,12 @@ const fetchProfile = async () => {
     throw new Error("No profile found");
   }
 };
+
+const showingPromises = ref(false)
+if (route.fullPath.endsWith("promises")) {
+  showingPromises.value = true;
+  console.log('showing promises')
+}
 
 const {
   data: profile,

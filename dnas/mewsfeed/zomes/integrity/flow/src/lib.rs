@@ -5,13 +5,15 @@ use hdi::prelude::*;
 #[derive(Serialize, Deserialize)]
 #[hdk_link_types]
 pub enum LinkTypes {
-    Setup,
+    JobsDone,
 }
 
 #[hdk_entry_helper]
 #[derive(Clone, PartialEq, Eq)]
-pub enum TestType {
-    Reply,
+pub struct MewContract {
+    requestor: AgentPubKey,
+    promiser: AgentPubKey,
+    response_mew: String,
 }
 
 #[hdk_extern]
